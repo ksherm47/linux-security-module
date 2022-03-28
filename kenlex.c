@@ -8,7 +8,7 @@
 #include "kenlex_monitor.h"
 
 // may not need this, was part of guide for implementing a virtual file
-#define BUFF 2048
+#define BUFSIZE 2048
 
 // Notes
 // This module will get basic information from inotify
@@ -47,14 +47,21 @@
 
 
 //the file we'll use to interface with userspace
-static struct  *file_info;
+static struct proc_dir_entry *kenlex_file_info;
  
+//this stuff is based on the example guide i found, we will not be using it
+static int irq=20;
+module_param(irq,int,0660);
+ 
+static int mode=1;
+module_param(mode,int,0660);
+
 // FIXME: change this code to take info from ubuf and use it to add structs to our linked list (for now, just file paths)
 // For our code, we're really going to be reading in strings-- File name paths and creating structs for what we're monitoring,
 static ssize_t mywrite(struct file *file, const char __user *ubuf,size_t count, loff_t *ppos) 
 {
 	int num,c,i,m;
-	char buf[BUFF];
+	char buf[BUFSIZE];
 	if(*ppos > 0 || count > BUFSIZE)
 		return -EFAULT;
 	if(copy_from_user(buf, ubuf, count))
@@ -68,13 +75,6 @@ static ssize_t mywrite(struct file *file, const char __user *ubuf,size_t count, 
 	*ppos = c;
 	return c;
 }
-
-//this stuff is based on the example guide i found, we will not be using it
-static int irq=20;
-module_param(irq,int,0660);
- 
-static int mode=1;
-module_param(mode,int,0660);
  
  // edit to be relevant to our program (current code is from an online guide)
 static ssize_t myread(struct file *file, char __user *ubuf,size_t count, loff_t *ppos) 
@@ -101,7 +101,7 @@ static struct file_operations myops =
 
 static int kenlex_init(void) {
 
-        file_info = proc_create("kenlex", 0660, NULL, &myops);
+        //kenlex_file_info = proc_create("kenlex", 0660, NULL, &myops);
         printk (KERN_INFO "Kenlex Enabled\n");
 
 		setup_kenlex_monitor();
@@ -115,6 +115,7 @@ static int kenlex_init(void) {
 		listen_to_kenlex_events(kwd2);
 		*/
 
+		kenlex_cleanup();
 
         return 0;
 }
