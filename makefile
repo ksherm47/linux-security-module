@@ -1,1 +1,0 @@
-obj-m := kenlex_init.o

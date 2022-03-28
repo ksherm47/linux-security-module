@@ -5,6 +5,7 @@
 #include <linux/proc_fs.h>
 #include <asm/uaccess.h>
 #include "kenlex.h"
+#include "kenlex_monitor.h"
 
 // may not need this, was part of guide for implementing a virtual file
 #define BUFF 2048
@@ -102,10 +103,24 @@ static int kenlex_init(void) {
 
         file_info = proc_create("kenlex", 0660, NULL, &myops);
         printk (KERN_INFO "Kenlex Enabled\n");
+
+		setup_kenlex_monitor();
+
+		/*
+		int kwd1 = kenlex_add_path(path1);
+		int kwd2 = kenlex_add_path(path2);
+		int kwd3 = kenlex_add_path(path3);
+
+		listen_to_kenlex_events(kwd1);
+		listen_to_kenlex_events(kwd2);
+		*/
+
+
         return 0;
 }
 
 static void kenlex_exit(void) {
+	kenlex_cleanup();
 }
 
 module_init(kenlex_init);

@@ -1,0 +1,1 @@
+obj-m := kenlex.o kenlex_monitor.o
