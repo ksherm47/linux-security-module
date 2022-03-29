@@ -20,7 +20,7 @@
 // But that's a *to-do-later* problem or maybe it's something we just want to ignore altogether (and can blame the users; say they should write scripts to edit it each time)
 
 // Link for how to interface with proc
-// g-a-proc-file-and-interfacing-with-user-space/#.Yju1kJrMJb8
+// https://devarea.com/linux-kernel-development-creating-a-proc-file-and-interfacing-with-user-space/#.YkNIp5rMJb8
 
 // TO DO LIST
 // Add the actual kernel code to this repo so we can edit the things we need to edit (fs.c pretty much, also adding a settings option)
@@ -48,30 +48,36 @@
 
 //the file we'll use to interface with userspace
 static struct proc_dir_entry *kenlex_file_info;
- 
-//this stuff is based on the example guide i found, we will not be using it
-static int irq=20;
-module_param(irq,int,0660);
- 
-static int mode=1;
-module_param(mode,int,0660);
 
-// FIXME: change this code to take info from ubuf and use it to add structs to our linked list (for now, just file paths)
+// list_head is defined in <linux/list.h>
+// head of our linked list containing file paths to watch
+struct list_head kenlex_watch_list_head;
+ 
+// TODO: how to use module_param? 
+//static int mode=1;
+//module_param(mode,int,0660);
+
 // For our code, we're really going to be reading in strings-- File name paths and creating structs for what we're monitoring,
 static ssize_t mywrite(struct file *file, const char __user *ubuf,size_t count, loff_t *ppos) 
 {
 	int num,c,i,m;
 	char buf[BUFSIZE];
-	if(*ppos > 0 || count > BUFSIZE)
+	char newPath[count];
+	if(count > BUFSIZE)
 		return -EFAULT;
 	if(copy_from_user(buf, ubuf, count))
 		return -EFAULT;
-	num = sscanf(buf,"%d %d",&i,&m);
-	if(num != 2)
+	num = sscanf(buf,"%s",newPath);
+	// only scanning in 1 thing, in future will scan in path and likely some numbers
+	if(num != 1)
 		return -EFAULT;
-	irq = i; 
-	mode = m;
+	
 	c = strlen(buf);
+	new_node->info.name = (char*)kmalloc(c,GFP_KERNEL)
+	new_node->info.name_len = c;
+	strcpy(new_node->info.name, buf);
+	list_add(&new_node->list_node,&kenlex_watch_list_head);
+	// TODO: add new file to watch
 	*ppos = c;
 	return c;
 }
@@ -83,9 +89,16 @@ static ssize_t myread(struct file *file, char __user *ubuf,size_t count, loff_t 
 	int len=0;
 	if(*ppos > 0 || count < BUFSIZE)
 		return 0;
-	len += sprintf(buf,"irq = %d\n",irq);
-	len += sprintf(buf + len,"mode = %d\n",mode);
 	
+	struct list_head *ptr;
+	struct kenlex_watch_list_item *current_entry;
+	// Is this good enough?? What happens when we go past buff limit? is this thought through?
+	list_for_each(ptr, &kenlex_watch_list_head) {
+ 		current_entry=list_entry(ptr,struct kenlex_watch_list_item,list_node);
+		// printing each file name to buffer
+       	len  += sprintf(buf+len, "\n%s\n",current_entry->info.name);
+  	}
+	// showing the list to the user
 	if(copy_to_user(ubuf,buf,len))
 		return -EFAULT;
 	*ppos = len;
@@ -100,12 +113,28 @@ static struct file_operations myops =
 };
 
 static int kenlex_init(void) {
-
+		struct kenlex_watch_list_item *etc_password;
         //kenlex_file_info = proc_create("kenlex", 0660, NULL, &myops);
         printk (KERN_INFO "Kenlex Enabled\n");
 
 		setup_kenlex_monitor();
+		INIT_LIST_HEAD(&kenlex_watch_list_head);
 
+		//allocate memory for included-by-default files in our watch list
+		etc_password=kmalloc(sizeof(struct kenlex_watch_list_item *),GFP_KERNEL);
+
+		//assign values for included-by-default files in our watch list
+		etc_password->info.name = (char*)kmalloc(sizeof("/etc/password"),GFP_KERNEL)
+		etc_password->info.name_len = strlen("etc/password")
+		strcpy(etc_password->info.name, "/etc/password");
+
+		// Add the default files to the list
+		list_add(&etc_password->list_node,&kenlex_watch_list_head);
+
+		//FIXME: loop through list to add all file paths to the inotify watch
+		// Question.... do we need to handle the context? Like which user added it?
+		
+		
 		/*
 		int kwd1 = kenlex_add_path(path1);
 		int kwd2 = kenlex_add_path(path2);
