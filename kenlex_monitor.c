@@ -10,17 +10,17 @@
 static int inotify_fd = -1;
 static int* inotify_wd;
 static int* active_wd = NULL;
+static char** wd_item_names = NULL;
 static int num_active_wd = 0;
 static int max_active_wd = 10;
 static int wd_size = 0;
 static int wd_max_size = 10;
 
 pthread_mutex_t active_wd_mutex;
-pthread_t inotify_thread;
 
 void* inotify_listen(void* arg);
 
-int setup_kenlex_monitor(void) {
+int setup_kenlex_monitor(pthread_t* monitor_thread) {
     inotify_fd = inotify_init1(0);
     if (inotify_fd < 0) {
         printf("Error opening inotify instance: Error number %d\n", errno);
@@ -29,8 +29,9 @@ int setup_kenlex_monitor(void) {
 
     inotify_wd = (int*)malloc(wd_max_size * sizeof(int));
     active_wd = (int*)malloc(max_active_wd * sizeof(int));
+    wd_item_names = (char**)malloc(max_active_wd * sizeof(char*));
 
-    int rc = pthread_create(&inotify_thread, NULL, inotify_listen, "inotify_thread");
+    int rc = pthread_create(monitor_thread, NULL, inotify_listen, "monitor_thread");
     if (rc < 0) {
         printf("Error starting inotify thread: Error number %d\n", errno);
         return -1;
@@ -76,13 +77,8 @@ void* inotify_listen(void* arg) {
                 pthread_mutex_lock(&active_wd_mutex);
                 for (j = 0; j < num_active_wd; j++) {                  
                     if (event -> wd == inotify_wd[active_wd[j]]) {
-                        char* item = 0;
-                        int item_len = 0;
-
-                        if (event -> len) {
-                            item = event -> name;
-                            item_len = event -> len;
-                        }
+                        char* item = wd_item_names[active_wd[j]];
+                        int item_len = strlen(wd_item_names[active_wd[j]]);
 
                         add_event_to_queue(item, item_len, event -> mask);
                         break;
@@ -102,6 +98,7 @@ void* inotify_listen(void* arg) {
 int kenlex_add_path(const char* path) {
     int i, wd;
     int* new_wd;
+    char** new_wd_names;
 
     if (inotify_fd > 0) {
         // All events for now       
@@ -116,17 +113,22 @@ int kenlex_add_path(const char* path) {
 
             wd_max_size += 10;
             new_wd = (int*)malloc(wd_max_size * sizeof(int));
+            new_wd_names = (char**)malloc(wd_max_size * sizeof(char*));
 
             for (i = 0; i < wd_size; i++) {
                 new_wd[i] = inotify_wd[i];
+                new_wd_names[i] = wd_item_names[i];
             }
 
             free(inotify_wd);
+            free(wd_item_names);
 
             inotify_wd = new_wd;
+            wd_item_names = new_wd_names;
         }
 
         inotify_wd[wd_size] = wd;
+        wd_item_names[wd_size] = (char*)path;
         wd_size += 1;
         return wd_size - 1;
     }
@@ -153,8 +155,8 @@ int listen_for_kenlex_events(int kenlex_wd) {
         active_wd = new_active_wd;
     }
 
-    num_active_wd += 1;
     active_wd[num_active_wd] = kenlex_wd;
+    num_active_wd += 1;
     pthread_mutex_unlock(&active_wd_mutex);
     return 0;
 }

@@ -20,9 +20,9 @@ struct settings_list_struct {
     int id;
 };
 
-static struct events_queue_struct* events_queue = 0;
+static struct events_queue_struct* events_queue_head = 0;
 static struct settings_list_struct* settings_list = 0;
-static struct events_queue_struct* events_queue_end = 0;
+static struct events_queue_struct* events_queue_tail = 0;
 static struct settings_list_struct* settings_list_end = 0;
 static int num_events = 0;
 static int settings_size = 0;

@@ -13,9 +13,6 @@ void* event_processing_thread(void* arg) {
     }
 }
 
-void begin_event_processing() {
-    pthread_t processing_thread;
-    pthread_create(&processing_thread, NULL, event_processing_thread, "processing thread");
-    while(1) {
-    }
+void begin_event_processing(pthread_t* processing_thread) {
+    pthread_create(processing_thread, NULL, event_processing_thread, "processing_thread");
 }
