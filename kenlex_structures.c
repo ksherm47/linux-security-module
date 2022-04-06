@@ -48,3 +48,129 @@ int dequeue_event(struct events_queue_struct* event) {
     pthread_mutex_unlock(&events_queue_mutex);
     return ret;
 }
+
+void add_item_setting(char* item, int item_len, struct event_settings_struct event_settings, int setting_type) {
+    pthread_mutex_lock(&item_settings_list_mutex);
+
+    if (!item_settings_list) {
+        item_settings_list = (struct item_settings_list_struct*)malloc(siezof(struct item_settings_list_struct));
+        item_settings_list -> item = item;
+        item_settings_list -> item_len = item_len;
+
+        if (setting_type & READ) {
+            (item_settings_list -> item_settings).reads = event_settings;
+        }
+
+        if (setting_type & WRITE) {
+            (item_settings_list -> item_settings).writes = event_settings;
+        }
+
+        if (setting_type & ACCESS) {
+            (item_settings_list -> item_settings).accesses = event_settings;
+        }
+
+        item_settings_list -> next = 0;
+
+    } else {
+        struct item_settings_list_struct* runner = item_settings_list;
+
+        while(strcmp(runner -> item, item) && runner -> next != 0) {
+            runner = runner -> next;
+        }
+
+        if (!strcmp(runner -> item, item)) {
+
+            if (setting_type & READ) {
+                (runner -> item_settings).reads = event_settings;
+            }
+
+            if (setting_type & WRITE) {
+                (runner -> item_settings).writes = event_settings;
+            }
+
+            if (setting_type & ACCESS) {
+                (runner -> item_settings).accesses = event_settings;
+            }
+
+        } else {
+            struct item_settings_list_struct* new_item_setting = (struct item_settings_list_struct*)malloc(siezof(struct item_settings_list_struct));
+            new_item_setting -> item = item;
+            new_item_setting -> item_len = item_len;
+
+            if (setting_type & READ) {
+                (new_item_setting -> item_settings).reads = event_settings;
+            }
+
+            if (setting_type & WRITE) {
+                (new_item_setting -> item_settings).writes = event_settings;
+            }
+
+            if (setting_type & ACCESS) {
+                (new_item_setting -> item_settings).accesses = event_settings;
+            }
+            
+            new_item_setting -> next = 0;
+            runner -> next = new_item_setting;
+        }
+    }
+    
+    pthread_mutex_unlock(&item_settings_list_mutex);
+}
+
+int get_item_settings(char* item, struct item_settings_struct* item_settings) {
+    pthread_mutex_lock(&item_settings_list_mutex);
+
+    int rc = -1;
+    if (item_settings_list) {
+        struct item_settings_list_struct* runner = item_settings_list;
+
+        while(strcmp(runner -> item, item) && runner -> next != 0) {
+            runner = runner -> next;
+        }
+
+        if (!strcmp(runner -> item, item)) {
+
+            if (setting_type & READ) {
+                item_settings -> reads = (runner -> item_settings).reads;
+            }
+
+            if (setting_type & WRITE) {
+                item_settings -> writes = (runner -> item_settings).writes;
+            }
+
+            if (setting_type & ACCESS) {
+                item_settings -> accesses = (runner -> item_settings).accesses;
+            }
+            rc = 0;
+        }
+    }
+
+    pthread_mutex_unlock((&item_settings_list_mutex);
+    return rc;
+}
+
+void update_log_severity(int severity) {
+    pthread_mutex_lock(&global_settings_mutex);
+    global_settings.log_severity = severity;
+    pthread_mutex_unlock(&global_settings_mutex);
+}
+
+int get_log_severity() {
+    pthread_mutex_lock(&global_settings_mutex);
+    int severity = global_settings.log_severity;
+    pthread_mutex_unlock(&global_settings_mutex);
+    return severity;
+}
+
+void update_email_severity(int severity) {
+    pthread_mutex_lock(&global_settings_mutex);
+    global_settings.email_severity = severity;
+    pthread_mutex_unlock(&global_settings_mutex);
+}
+
+int get_email_severity() {
+    pthread_mutex_lock(&global_settings_mutex);
+    int severity = global_settings.email_severity;
+    pthread_mutex_unlock(&global_settings_mutex);
+    return severity;
+}

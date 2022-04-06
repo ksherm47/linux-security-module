@@ -127,6 +127,12 @@ int kenlex_add_path(const char* path) {
             wd_item_names = new_wd_names;
         }
 
+        struct event_settings_struct settings;
+        settings.severity = 0;
+        settings.frequency = -1;
+        settings.time_frame = PER_SECOND;
+        add_item_setting(path, strlen(path), settings, READ | WRITE | ACCESS);
+
         inotify_wd[wd_size] = wd;
         wd_item_names[wd_size] = (char*)path;
         wd_size += 1;
