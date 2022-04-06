@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
+#include <limits.h>
+#include <stdlib.h>
 #include "kenlex_structures.h"
 
 static int inotify_fd = -1;
@@ -101,8 +103,12 @@ int kenlex_add_path(const char* path) {
     char** new_wd_names;
 
     if (inotify_fd > 0) {
+
+        char full_path[PATH_MAX];
+        realpath(path, full_path);
+
         // All events for now       
-        wd = inotify_add_watch(inotify_fd, path, IN_ALL_EVENTS);
+        wd = inotify_add_watch(inotify_fd, full_path, IN_ALL_EVENTS);
 
         if (wd < 0) {
             printf("Error adding path to inotify: Error number %d\n", errno);
@@ -131,10 +137,10 @@ int kenlex_add_path(const char* path) {
         settings.severity = 0;
         settings.frequency = -1;
         settings.time_frame = PER_SECOND;
-        add_item_setting(path, strlen(path), settings, READ | WRITE | ACCESS);
+        add_item_setting((char*)full_path, strlen(full_path), settings, READ | WRITE | ACCESS);
 
         inotify_wd[wd_size] = wd;
-        wd_item_names[wd_size] = (char*)path;
+        wd_item_names[wd_size] = (char*)full_path;
         wd_size += 1;
         return wd_size - 1;
     }

@@ -3,7 +3,7 @@
 #include "kenlex_structures.h"
 
 static int log_fd;
-int init_log(char* log_filename);
-int log(char* item, int mask, int severity);
+int kenlex_log_init(char* log_filename);
+int kenlex_log(char* item, int mask, int severity);
 
 #endif

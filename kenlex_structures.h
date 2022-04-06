@@ -35,7 +35,7 @@ struct item_settings_struct {
     struct event_settings_struct reads;
     struct event_settings_struct writes;
     struct event_settings_struct accesses;
-}
+};
 
 struct item_settings_list_struct {
     struct item_settings_list_struct* next;
@@ -58,11 +58,12 @@ static struct item_settings_list_struct* settings_list_end = 0;
 static int num_events = 0;
 static int settings_size = 0;
 
-static struct global_settings_struct global_settings;
-global_settings.log_severity = 0;
-global_settings.email_severity = 0;
-global_settings.email_addresses = 0;
-global_settings.num_email_addresses = 0;
+static struct global_settings_struct global_settings = {
+    .log_severity = 0,
+    .email_severity = 0,
+    .email_addresses = 0,
+    .num_email_addresses = 0
+};
 
 void add_event_to_queue(char* item, int item_len, int event_mask);
 int dequeue_event(struct events_queue_struct* event);
@@ -71,9 +72,9 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
 int get_item_settings(char* item, struct item_settings_struct* item_settings); 
 //void remove_item_setting(char* item);
 
-void update_log_severity(int severity);
+void set_log_severity(int severity);
 int get_log_severity();
-void update_email_severity(int severity);
+void set_email_severity(int severity);
 int get_email_severity();
 void add_email_address(char* email);
 

@@ -1,4 +1,5 @@
 #include "kenlex_structures.h"
+#include <string.h>
 
 void add_event_to_queue(char* item, int item_len, int event_mask) {
     pthread_mutex_lock(&events_queue_mutex);
@@ -53,7 +54,7 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
     pthread_mutex_lock(&item_settings_list_mutex);
 
     if (!item_settings_list) {
-        item_settings_list = (struct item_settings_list_struct*)malloc(siezof(struct item_settings_list_struct));
+        item_settings_list = (struct item_settings_list_struct*)malloc(sizeof(struct item_settings_list_struct));
         item_settings_list -> item = item;
         item_settings_list -> item_len = item_len;
 
@@ -93,7 +94,7 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
             }
 
         } else {
-            struct item_settings_list_struct* new_item_setting = (struct item_settings_list_struct*)malloc(siezof(struct item_settings_list_struct));
+            struct item_settings_list_struct* new_item_setting = (struct item_settings_list_struct*)malloc(sizeof(struct item_settings_list_struct));
             new_item_setting -> item = item;
             new_item_setting -> item_len = item_len;
 
@@ -129,27 +130,18 @@ int get_item_settings(char* item, struct item_settings_struct* item_settings) {
         }
 
         if (!strcmp(runner -> item, item)) {
-
-            if (setting_type & READ) {
-                item_settings -> reads = (runner -> item_settings).reads;
-            }
-
-            if (setting_type & WRITE) {
-                item_settings -> writes = (runner -> item_settings).writes;
-            }
-
-            if (setting_type & ACCESS) {
-                item_settings -> accesses = (runner -> item_settings).accesses;
-            }
+            item_settings -> reads = (runner -> item_settings).reads;
+            item_settings -> writes = (runner -> item_settings).writes;
+            item_settings -> accesses = (runner -> item_settings).accesses;
             rc = 0;
         }
     }
 
-    pthread_mutex_unlock((&item_settings_list_mutex);
+    pthread_mutex_unlock(&item_settings_list_mutex);
     return rc;
 }
 
-void update_log_severity(int severity) {
+void set_log_severity(int severity) {
     pthread_mutex_lock(&global_settings_mutex);
     global_settings.log_severity = severity;
     pthread_mutex_unlock(&global_settings_mutex);
@@ -162,7 +154,7 @@ int get_log_severity() {
     return severity;
 }
 
-void update_email_severity(int severity) {
+void set_email_severity(int severity) {
     pthread_mutex_lock(&global_settings_mutex);
     global_settings.email_severity = severity;
     pthread_mutex_unlock(&global_settings_mutex);

@@ -1,16 +1,19 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/inotify.h>
+#include <time.h>
 #include "kenlex_logging.h"
 
-int init_log(char* log_filename) {
-    log_fd = open(log_filename, O_RDWR | O_CREAT, 0644);
+int kenlex_log_init(char* log_filename) {
+    log_fd = open(log_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
 
     if (log_fd < 0) {
         return -1;
     }
 }
 
-int log(char* item, int mask, int severity) {
+int kenlex_log(char* item, int mask, int severity) {
 
     if (log_fd > 0) {
 
@@ -63,9 +66,15 @@ int log(char* item, int mask, int severity) {
         if (mask & IN_OPEN) {
             event_description = "File or directory was opened";
         }
+
+        time_t temp = time(NULL);
+        struct tm* timeptr = localtime(&temp);
+        char date_string[100];
+
+        strftime(date_string, 100, "%D %r", timeptr);
         
         char log_message[256];
-        snprintf(log_message, 256, "%s: %s (Severity %d)\n", item, event_description, severity);
+        snprintf(log_message, 256, "(%s) %s: %s (Severity %d)\n", date_string, item, event_description, severity);
 
         write(log_fd, log_message, strlen(log_message));
     }

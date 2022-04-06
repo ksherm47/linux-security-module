@@ -16,19 +16,19 @@ void* event_processing_thread(void* arg) {
             //printf("mask: %d item: %s item_len: %d\n", event.event_mask, event.item, event.item_len);
 
             char* item = event.item;
-            int mask = event.mask;
-            bool read = false, write = false, access = false;
+            int mask = event.event_mask;
+            int read = 0, write = 0, access = 0;
 
             if (mask & IN_ACCESS || mask & IN_CLOSE_NOWRITE || mask & IN_OPEN) {
-                read = true;
+                read = 1;
             }
 
             if (mask & IN_ATTRIB || mask & IN_CLOSE_WRITE || IN_MODIFY) {
-                write = true;
+                write = 1;
             }
 
             if (mask & IN_CREATE || mask & IN_DELETE || mask & IN_DELETE_SELF || mask & IN_MOVE_SELF || mask & IN_MOVED_FROM || mask & IN_MOVED_FROM) {
-                access = true;
+                access = 1;
             }
 
             int item_read_severity = 0;
@@ -40,12 +40,12 @@ void* event_processing_thread(void* arg) {
             if (get_item_settings(item, &item_settings) == 0) {
                 item_read_severity = item_settings.reads.severity;
                 item_write_severity = item_settings.writes.severity;
-                item_access_severity = item_settings.access.severity;
+                item_access_severity = item_settings.accesses.severity;
             }
 
             if (read) {
                 if (item_read_severity >= log_severity_threshold) {  
-                    log(item, mask, item_read_severity);
+                    kenlex_log(item, mask, item_read_severity);
                 }
 
                 if (item_read_severity >= email_severity_threshold) {
@@ -55,7 +55,7 @@ void* event_processing_thread(void* arg) {
 
             if (write) {
                 if (item_write_severity >= log_severity_threshold) {
-                    log(item, mask, item_write_severity);
+                    kenlex_log(item, mask, item_write_severity);
                 }
 
                 if (item_write_severity >= email_severity_threshold) {
@@ -65,7 +65,7 @@ void* event_processing_thread(void* arg) {
 
             if (access) {
                 if (item_access_severity >= log_severity_threshold) {
-                    log(item, mask, item_access_severity);
+                    kenlex_log(item, mask, item_access_severity);
                 }
 
                 if (item_access_severity >= email_severity_threshold) {
