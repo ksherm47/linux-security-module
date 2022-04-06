@@ -45,7 +45,7 @@ void* event_processing_thread(void* arg) {
 
             if (read) {
                 if (item_read_severity >= log_severity_threshold) {  
-                    kenlex_log(item, mask, item_read_severity);
+                    kenlex_log_event(item, mask, item_read_severity);
                 }
 
                 if (item_read_severity >= email_severity_threshold) {
@@ -55,7 +55,7 @@ void* event_processing_thread(void* arg) {
 
             if (write) {
                 if (item_write_severity >= log_severity_threshold) {
-                    kenlex_log(item, mask, item_write_severity);
+                    kenlex_log_event(item, mask, item_write_severity);
                 }
 
                 if (item_write_severity >= email_severity_threshold) {
@@ -65,7 +65,7 @@ void* event_processing_thread(void* arg) {
 
             if (access) {
                 if (item_access_severity >= log_severity_threshold) {
-                    kenlex_log(item, mask, item_access_severity);
+                    kenlex_log_event(item, mask, item_access_severity);
                 }
 
                 if (item_access_severity >= email_severity_threshold) {

@@ -13,7 +13,7 @@ int kenlex_log_init(char* log_filename) {
     }
 }
 
-int kenlex_log(char* item, int mask, int severity) {
+int kenlex_log_event(char* item, int mask, int severity) {
 
     if (log_fd > 0) {
 

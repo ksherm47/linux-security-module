@@ -106,7 +106,7 @@ int kenlex_add_path(const char* path) {
 
         char full_path[PATH_MAX];
         realpath(path, full_path);
-
+        
         // All events for now       
         wd = inotify_add_watch(inotify_fd, full_path, IN_ALL_EVENTS);
 
@@ -123,10 +123,15 @@ int kenlex_add_path(const char* path) {
 
             for (i = 0; i < wd_size; i++) {
                 new_wd[i] = inotify_wd[i];
-                new_wd_names[i] = wd_item_names[i];
+                new_wd_names[i] = (char*)malloc(strlen(wd_item_names[i]) + 1);
+                memcpy(new_wd_names[i], wd_item_names[i], strlen(wd_item_names[i]) + 1);
             }
 
             free(inotify_wd);
+
+            for (int i = 0; i < wd_size; i++) {
+                free(wd_item_names[i]);
+            }
             free(wd_item_names);
 
             inotify_wd = new_wd;
@@ -140,7 +145,9 @@ int kenlex_add_path(const char* path) {
         add_item_setting((char*)full_path, strlen(full_path), settings, READ | WRITE | ACCESS);
 
         inotify_wd[wd_size] = wd;
-        wd_item_names[wd_size] = (char*)full_path;
+        wd_item_names[wd_size] = (char*)malloc(strlen(full_path) + 1);
+        memcpy(wd_item_names[wd_size], full_path, strlen(full_path));
+
         wd_size += 1;
         return wd_size - 1;
     }
