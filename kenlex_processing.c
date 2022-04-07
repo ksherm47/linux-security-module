@@ -1,5 +1,6 @@
 #include "kenlex_structures.h"
 #include "kenlex_logging.h"
+#include "kenlex_processing.h"
 #include <sys/inotify.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ void* event_processing_thread(void* arg) {
                 read = 1;
             }
 
-            if (mask & IN_ATTRIB || mask & IN_CLOSE_WRITE || IN_MODIFY) {
+            if (mask & IN_ATTRIB || mask & IN_CLOSE_WRITE || mask & IN_MODIFY) {
                 write = 1;
             }
 
@@ -76,6 +77,13 @@ void* event_processing_thread(void* arg) {
     }
 }
 
-void begin_event_processing(pthread_t* processing_thread) {
-    pthread_create(processing_thread, NULL, event_processing_thread, "processing_thread");
+int begin_event_processing(pthread_t* processing_thread) {
+    int rc = -1;
+    static int thread_started = 0;
+    if (!thread_started) {        
+        pthread_create(processing_thread, NULL, event_processing_thread, "processing_thread");
+        thread_started = 1;
+        rc = 0;
+    }
+    return rc;
 }

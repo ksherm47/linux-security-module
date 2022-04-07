@@ -1,5 +1,7 @@
 #include "kenlex_structures.h"
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 
 void add_event_to_queue(char* item, int item_len, int event_mask) {
     pthread_mutex_lock(&events_queue_mutex);
@@ -53,9 +55,13 @@ int dequeue_event(struct events_queue_struct* event) {
 void add_item_setting(char* item, int item_len, struct event_settings_struct event_settings, int setting_type) {
     pthread_mutex_lock(&item_settings_list_mutex);
 
+    char full_path[PATH_MAX];
+    realpath(item, full_path);
+
     if (!item_settings_list) {
         item_settings_list = (struct item_settings_list_struct*)malloc(sizeof(struct item_settings_list_struct));
-        item_settings_list -> item = item;
+        item_settings_list -> item = (char*)malloc(strlen(full_path) + 1);
+        memcpy(item_settings_list -> item, full_path, strlen(full_path) + 1);
         item_settings_list -> item_len = item_len;
 
         if (setting_type & READ) {
@@ -75,11 +81,11 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
     } else {
         struct item_settings_list_struct* runner = item_settings_list;
 
-        while(strcmp(runner -> item, item) && runner -> next != 0) {
+        while (strcmp(runner -> item, full_path) && runner -> next != 0) {
             runner = runner -> next;
         }
 
-        if (!strcmp(runner -> item, item)) {
+        if (!strcmp(runner -> item, full_path)) {
 
             if (setting_type & READ) {
                 (runner -> item_settings).reads = event_settings;
@@ -95,7 +101,8 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
 
         } else {
             struct item_settings_list_struct* new_item_setting = (struct item_settings_list_struct*)malloc(sizeof(struct item_settings_list_struct));
-            new_item_setting -> item = item;
+            new_item_setting -> item = (char*)malloc(strlen(full_path) + 1);
+            memcpy(new_item_setting -> item, full_path, strlen(full_path) + 1);
             new_item_setting -> item_len = item_len;
 
             if (setting_type & READ) {
@@ -121,15 +128,18 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
 int get_item_settings(char* item, struct item_settings_struct* item_settings) {
     pthread_mutex_lock(&item_settings_list_mutex);
 
+    char full_path[PATH_MAX];
+    realpath(item, full_path);
+
     int rc = -1;
     if (item_settings_list) {
         struct item_settings_list_struct* runner = item_settings_list;
 
-        while(strcmp(runner -> item, item) && runner -> next != 0) {
+        while(strcmp(runner -> item, full_path) && runner -> next != 0) {
             runner = runner -> next;
         }
 
-        if (!strcmp(runner -> item, item)) {
+        if (!strcmp(runner -> item, full_path)) {
             item_settings -> reads = (runner -> item_settings).reads;
             item_settings -> writes = (runner -> item_settings).writes;
             item_settings -> accesses = (runner -> item_settings).accesses;
