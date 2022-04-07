@@ -1,5 +1,5 @@
 #include "kenlex_structures.h"
-#include "kenlex_logging.h"
+#include "kenlex_notifications.h"
 #include "kenlex_processing.h"
 #include <sys/inotify.h>
 #include <stdlib.h>

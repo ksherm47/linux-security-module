@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/inotify.h>
+#include <unistd.h>
 #include <time.h>
-#include "kenlex_logging.h"
+#include "kenlex_notifications.h"
 
 int kenlex_log_init(char* log_filename) {
     log_fd = open(log_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
@@ -17,8 +18,7 @@ int kenlex_log_event(char* item, int mask, int severity) {
 
     if (log_fd > 0) {
 
-        char* event_description = 0;;
-        int len;
+        char* event_description = 0;
 
         if (mask & IN_ACCESS) {
             event_description = "File was accessed";
@@ -82,4 +82,16 @@ int kenlex_log_event(char* item, int mask, int severity) {
             event_description = 0;
         }
     }
+}
+
+int kenlex_email_event(char* item, int mask, int severity) {
+    return -1;
+}
+
+int kenlex_log_frequency(char* item, int frequency, int time_frame) {
+    return -1;
+}
+
+int kenlex_email_frequency(char* item, int frequency, int time_frame) {
+    return -1;
 }
