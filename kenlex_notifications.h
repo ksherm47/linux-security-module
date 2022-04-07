@@ -4,8 +4,9 @@
 static int log_fd = -1;
 int kenlex_log_init(char* log_filename);
 int kenlex_log_event(char* item, int mask, int severity);
+int kenlex_log_error(char* error_msg);
 int kenlex_email_event(char* item, int mask, int severity);
-int kenlex_log_frequency(char* item, int frequency, int time_frame);
-int kenlex_email_frequency(char* item, int frequency, int time_frame);
+int kenlex_log_frequency(char* item, int frequency, long int time_frame, int event_type);
+int kenlex_email_frequency(char* item, int frequency, long int time_frame);
 
 #endif

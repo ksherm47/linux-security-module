@@ -3,13 +3,14 @@
 #include <limits.h>
 #include <stdlib.h>
 
-void add_event_to_queue(char* item, int item_len, int event_mask) {
+void add_event_to_queue(char* item, int item_len, int event_mask, long int timestamp) {
     pthread_mutex_lock(&events_queue_mutex);
     if(!events_queue_tail) {
         events_queue_head = (struct events_queue_struct*)malloc(sizeof(struct events_queue_struct));
         events_queue_head -> event_mask = event_mask;
         events_queue_head -> item = item;
         events_queue_head -> item_len = item_len;
+        events_queue_head -> timestamp = timestamp;
         events_queue_head -> next = 0;
         events_queue_head -> prev = 0;
         events_queue_tail = events_queue_head;
@@ -18,6 +19,7 @@ void add_event_to_queue(char* item, int item_len, int event_mask) {
         new_event -> event_mask = event_mask;
         new_event -> item = item;
         new_event -> item_len = item_len;
+        new_event -> timestamp = timestamp;
 
         new_event -> next = events_queue_head;
         new_event -> prev = 0;
@@ -35,6 +37,7 @@ int dequeue_event(struct events_queue_struct* event) {
         event -> event_mask = events_queue_tail -> event_mask;
         event -> item = events_queue_tail -> item;
         event -> item_len = events_queue_tail -> item_len;
+        event -> timestamp = events_queue_tail -> timestamp;
 
         if (events_queue_tail -> prev != 0) {
             events_queue_tail = events_queue_tail -> prev;
@@ -76,6 +79,10 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
             (item_settings_list -> item_settings).accesses = event_settings;
         }
 
+        (item_settings_list -> item_settings).num_read_events = 0;
+        (item_settings_list -> item_settings).num_write_events = 0;
+        (item_settings_list -> item_settings).num_access_events = 0;
+        (item_settings_list -> item_settings).last_alert = -1;
         item_settings_list -> next = 0;
 
     } else {
@@ -117,6 +124,10 @@ void add_item_setting(char* item, int item_len, struct event_settings_struct eve
                 (new_item_setting -> item_settings).accesses = event_settings;
             }
             
+            (item_settings_list -> item_settings).num_read_events = 0;
+            (item_settings_list -> item_settings).num_write_events = 0;
+            (item_settings_list -> item_settings).num_access_events = 0;
+            (item_settings_list -> item_settings).last_alert = -1;
             new_item_setting -> next = 0;
             runner -> next = new_item_setting;
         }
@@ -143,6 +154,66 @@ int get_item_settings(char* item, struct item_settings_struct* item_settings) {
             item_settings -> reads = (runner -> item_settings).reads;
             item_settings -> writes = (runner -> item_settings).writes;
             item_settings -> accesses = (runner -> item_settings).accesses;
+            item_settings -> last_alert = (runner -> item_settings).last_alert;
+            item_settings -> num_read_events = (runner -> item_settings).num_read_events;
+            item_settings -> num_write_events = (runner -> item_settings).num_write_events;
+            item_settings -> num_access_events = (runner -> item_settings).num_access_events;
+            rc = 0;
+        }
+    }
+
+    pthread_mutex_unlock(&item_settings_list_mutex);
+    return rc;
+}
+
+int update_last_alert(char* item, long last_alert) {
+    pthread_mutex_lock(&item_settings_list_mutex);
+
+    char full_path[PATH_MAX];
+    realpath(item, full_path);
+
+    int rc = -1;
+    if(item_settings_list) {
+        struct item_settings_list_struct* runner = item_settings_list;
+
+        while(strcmp(runner -> item, full_path) && runner -> next != 0) {
+            runner = runner -> next;
+        }
+
+        if (!strcmp(runner -> item, full_path)) {
+            (runner -> item_settings).last_alert = last_alert;
+            rc = 0;
+        }
+    }
+
+    pthread_mutex_unlock(&item_settings_list_mutex);
+    return rc;
+}
+
+int update_num_events(char* item, int num_events, int type) {
+    pthread_mutex_lock(&item_settings_list_mutex);
+
+    char full_path[PATH_MAX];
+    realpath(item, full_path);
+
+    int rc = -1;
+    if(item_settings_list) {
+        struct item_settings_list_struct* runner = item_settings_list;
+
+        while(strcmp(runner -> item, full_path) && runner -> next != 0) {
+            runner = runner -> next;
+        }
+
+        if (!strcmp(runner -> item, full_path)) {
+            if (type & READ) {        
+                (runner -> item_settings).num_read_events = num_events;
+            }
+            if (type & WRITE) {        
+                (runner -> item_settings).num_write_events = num_events;
+            }
+            if (type & ACCESS) {        
+                (runner -> item_settings).num_access_events = num_events;
+            }
             rc = 0;
         }
     }

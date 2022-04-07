@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "kenlex_structures.h"
 
 static int inotify_fd = -1;
@@ -57,6 +58,7 @@ void* inotify_listen(void* arg) {
     buffer_len = 15 * sizeof(struct inotify_event);
     char buffer[buffer_len] __attribute__((aligned(__alignof__(struct inotify_event))));
     ssize_t len, i = 0, j;
+    struct timeval tv;
 
 
     while (1) {
@@ -79,10 +81,11 @@ void* inotify_listen(void* arg) {
                 pthread_mutex_lock(&active_wd_mutex);
                 for (j = 0; j < num_active_wd; j++) {                  
                     if (event -> wd == inotify_wd[active_wd[j]]) {
+                        gettimeofday(&tv, NULL);
                         char* item = wd_item_names[active_wd[j]];
                         int item_len = strlen(wd_item_names[active_wd[j]]);
 
-                        add_event_to_queue(item, item_len, event -> mask);
+                        add_event_to_queue(item, item_len, event -> mask, (1000 * tv.tv_sec) + (tv.tv_usec / 1000));
                         break;
                     }
                 }
@@ -141,7 +144,7 @@ int kenlex_add_path(const char* path) {
         struct event_settings_struct settings;
         settings.severity = 0;
         settings.frequency = -1;
-        settings.time_frame = PER_SECOND;
+        settings.time_frame = 0;
         add_item_setting((char*)full_path, strlen(full_path), settings, READ | WRITE | ACCESS);
 
         inotify_wd[wd_size] = wd;

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "kenlex_notifications.h"
+#include "kenlex_structures.h"
 
 int kenlex_log_init(char* log_filename) {
     log_fd = open(log_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
@@ -14,8 +15,27 @@ int kenlex_log_init(char* log_filename) {
     }
 }
 
-int kenlex_log_event(char* item, int mask, int severity) {
+int kenlex_log_error(char* error_msg) {
+    int rc = -1;
+    if (log_fd > 0) {
 
+        time_t temp = time(NULL);
+        struct tm* timeptr = localtime(&temp);
+        char date_string[100];
+
+        strftime(date_string, 100, "%D %r", timeptr);
+
+        char error_message[512];
+        snprintf(error_message, 512, "(%s) ERROR: %s\n", date_string, error_message);
+
+        write(log_fd, error_message, 512);
+        rc = 0;   
+    }
+    return rc;
+}
+
+int kenlex_log_event(char* item, int mask, int severity) {
+    int rc = -1;
     if (log_fd > 0) {
 
         char* event_description = 0;
@@ -74,24 +94,57 @@ int kenlex_log_event(char* item, int mask, int severity) {
 
         strftime(date_string, 100, "%D %r", timeptr);
         
-        char log_message[256];
-        snprintf(log_message, 256, "(%s) %s: %s (Severity %d)\n", date_string, item, event_description, severity);
+        char log_message[512];
+        snprintf(log_message, 512, "(%s) %s: %s (Severity %d)\n", date_string, item, event_description, severity);
 
         write(log_fd, log_message, strlen(log_message));
         if (event_description) {
             event_description = 0;
         }
+        rc = 0;
     }
+    return rc;
 }
 
 int kenlex_email_event(char* item, int mask, int severity) {
     return -1;
 }
 
-int kenlex_log_frequency(char* item, int frequency, int time_frame) {
-    return -1;
+int kenlex_log_frequency(char* item, int frequency, long int time_frame, int event_type) {
+    int rc = -1;
+
+    if (log_fd > 0) {
+        time_t temp = time(NULL);
+        struct tm* timeptr = localtime(&temp);
+        char date_string[100];
+
+        strftime(date_string, 100, "%D %r", timeptr);
+
+        char* event_type_str;
+        switch(event_type) {
+            case READ:
+                event_type_str = "read";
+                break;
+            case WRITE:
+                event_type_str = "write";
+                break;
+            case ACCESS:
+                event_type_str = "access";
+                break;
+            default:
+                event_type_str = "";
+                break;
+        }
+
+        char log_message[512];
+        snprintf(log_message, 512, "(%s) %s: %d %s events triggered within %d milliseconds\n", date_string, item, frequency, event_type_str, time_frame);
+
+        write(log_fd, log_message, strlen(log_message));
+        rc = 0;
+    }
+    return rc;
 }
 
-int kenlex_email_frequency(char* item, int frequency, int time_frame) {
+int kenlex_email_frequency(char* item, int frequency, long int time_frame) {
     return -1;
 }

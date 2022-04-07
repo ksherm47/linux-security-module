@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define PER_SECOND 0
-#define PER_MINUTE 1
-#define PER_HOUR 2
-#define PER_DAY 3
-
 #define READ 0x00000001
 #define WRITE 0x00000010
 #define ACCESS 0x00000100
@@ -23,18 +18,23 @@ struct events_queue_struct {
     int event_mask;
     char* item;
     int item_len;
+    long int timestamp;
 };
 
 struct event_settings_struct {
     int severity;
     int frequency;
-    int time_frame;
+    long int time_frame;
 };
 
 struct item_settings_struct {
     struct event_settings_struct reads;
     struct event_settings_struct writes;
     struct event_settings_struct accesses;
+    int num_read_events;
+    int num_write_events;
+    int num_access_events;
+    long int last_alert;
 };
 
 struct item_settings_list_struct {
@@ -65,7 +65,7 @@ static struct global_settings_struct global_settings = {
     .num_email_addresses = 0
 };
 
-void add_event_to_queue(char* item, int item_len, int event_mask);
+void add_event_to_queue(char* item, int item_len, int event_mask, long int timestamp);
 int dequeue_event(struct events_queue_struct* event);
 
 void add_item_setting(char* item, int item_len, struct event_settings_struct event_settings, int setting_type);
@@ -77,5 +77,7 @@ int get_log_severity();
 void set_email_severity(int severity);
 int get_email_severity();
 void add_email_address(char* email);
+int update_last_alert(char* item, long last_alert);
+int update_num_events(char* item, int num_events, int type);
 
 #endif
