@@ -47,6 +47,8 @@ void* event_processing_thread(void* arg) {
 
             int log_severity_threshold = get_log_severity();
             int email_severity_threshold = get_email_severity();
+            char** email_addresses = get_email_addresses();
+            int num_email_addresses = get_num_email_addresses();
 
             if (get_item_settings(item, &item_settings) == 0) {
                 item_read_severity = item_settings.reads.severity;
@@ -82,7 +84,7 @@ void* event_processing_thread(void* arg) {
                 }
 
                 if (item_read_severity >= email_severity_threshold) {
-                    // Email it
+                    kenlex_email_event(item, mask, item_read_severity, email_addresses, num_email_addresses, READ);
                 }
 
                 if (item_read_frequency > 0) {
@@ -95,7 +97,7 @@ void* event_processing_thread(void* arg) {
                     if (timestamp - last_alert <= item_read_time_frame) {                    
                         if (num_read_events == item_read_frequency) {
                             kenlex_log_frequency(item, item_read_frequency, item_read_time_frame, READ);
-                            kenlex_email_frequency(item, item_read_frequency, item_read_time_frame);
+                            kenlex_email_frequency(item, item_read_frequency, item_read_time_frame, email_addresses, num_email_addresses, READ);
 
                             update_last_alert(item, timestamp);
                             update_num_events(item, 0, READ);
@@ -117,7 +119,7 @@ void* event_processing_thread(void* arg) {
                 }
 
                 if (item_write_severity >= email_severity_threshold) {
-                    // Email it
+                    kenlex_email_event(item, mask, item_write_severity, email_addresses, num_email_addresses, WRITE);
                 }
 
                 if (item_write_frequency > 0) {
@@ -130,7 +132,7 @@ void* event_processing_thread(void* arg) {
                     if (timestamp - last_alert <= item_write_time_frame) {
                         if (num_write_events == item_write_frequency) {
                             kenlex_log_frequency(item, item_write_frequency, item_write_time_frame, WRITE);
-                            kenlex_email_frequency(item, item_write_frequency, item_write_time_frame);
+                            kenlex_email_frequency(item, item_write_frequency, item_write_time_frame, email_addresses, num_email_addresses, WRITE);
 
                             update_last_alert(item, timestamp);
                             update_num_events(item, 0, WRITE);
@@ -152,7 +154,7 @@ void* event_processing_thread(void* arg) {
                 }
 
                 if (item_access_severity >= email_severity_threshold) {
-                    // Email it
+                    kenlex_email_event(item, mask, item_access_severity, email_addresses, num_email_addresses, ACCESS);
                 }
 
                 if (item_access_frequency > 0) {
@@ -166,7 +168,7 @@ void* event_processing_thread(void* arg) {
                     if (timestamp - last_alert <= item_access_time_frame) {               
                         if (num_access_events == item_access_frequency) {
                             kenlex_log_frequency(item, item_access_frequency, item_access_time_frame, ACCESS);
-                            kenlex_email_frequency(item, item_access_frequency, item_access_time_frame);
+                            kenlex_email_frequency(item, item_access_frequency, item_access_time_frame, email_addresses, num_email_addresses, ACCESS);
 
                             update_last_alert(item, timestamp);
                             update_num_events(item, 0, ACCESS);

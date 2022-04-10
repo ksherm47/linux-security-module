@@ -57,6 +57,7 @@ static struct events_queue_struct* events_queue_tail = 0;
 static struct item_settings_list_struct* settings_list_end = 0;
 static int num_events = 0;
 static int settings_size = 0;
+static int max_num_email_addresses = 10;
 
 static struct global_settings_struct global_settings = {
     .log_severity = 0,
@@ -76,7 +77,9 @@ void set_log_severity(int severity);
 int get_log_severity();
 void set_email_severity(int severity);
 int get_email_severity();
-void add_email_address(char* email);
+void add_email_address(char* email, int address_len);
+char** get_email_addresses();
+int get_num_email_addresses();
 int update_last_alert(char* item, long last_alert);
 int update_num_events(char* item, int num_events, int type);
 

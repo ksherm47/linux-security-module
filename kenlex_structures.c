@@ -222,6 +222,39 @@ int update_num_events(char* item, int num_events, int type) {
     return rc;
 }
 
+void add_email_address(char* email_address, int address_len) {
+    pthread_mutex_lock(&global_settings_mutex);
+
+    int size = global_settings.num_email_addresses;
+
+    if (!global_settings.email_addresses) {
+        global_settings.email_addresses = (char**)malloc(sizeof(char*) * max_num_email_addresses);
+    } 
+    
+    if (size == max_num_email_addresses) {
+        max_num_email_addresses += 10;
+        char** new_addresses = (char**)malloc(sizeof(char*) * max_num_email_addresses);
+
+        for (int i = 0; i < size; i++) {
+            char* address = global_settings.email_addresses[i];
+            int address_len = strlen(address);
+
+            new_addresses[i] = (char*)malloc(address_len + 1);
+            memcpy(new_addresses[i], address, address_len);
+            free(address);
+        }
+
+        free(global_settings.email_addresses);
+        global_settings.email_addresses = new_addresses;
+    }
+
+    global_settings.email_addresses[size] = (char*)malloc(address_len + 1);
+    memcpy(global_settings.email_addresses[size], email_address, address_len);
+    global_settings.num_email_addresses++;
+
+    pthread_mutex_unlock(&global_settings_mutex); 
+}
+
 void set_log_severity(int severity) {
     pthread_mutex_lock(&global_settings_mutex);
     global_settings.log_severity = severity;
@@ -246,4 +279,18 @@ int get_email_severity() {
     int severity = global_settings.email_severity;
     pthread_mutex_unlock(&global_settings_mutex);
     return severity;
+}
+
+char** get_email_addresses() {
+    pthread_mutex_lock(&global_settings_mutex);
+    char** email_addresses = global_settings.email_addresses;
+    pthread_mutex_unlock(&global_settings_mutex);
+    return email_addresses;
+}
+
+int get_num_email_addresses() {
+    pthread_mutex_lock(&global_settings_mutex);
+    int num_email_addresses = global_settings.num_email_addresses;
+    pthread_mutex_unlock(&global_settings_mutex);
+    return num_email_addresses;
 }
