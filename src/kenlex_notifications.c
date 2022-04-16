@@ -150,6 +150,10 @@ int kenlex_email_event(char* item, int mask, int severity, char** email_addresse
     snprintf(system_cmd, sizeof(system_cmd), "echo \"%s\" | mail -s \"Kenlex File Event Alert\" -a \"From:Kenlex Notifications\" -A %s %s", email_message, log_file, email_address_str);
     rc = system(system_cmd);
 
+    if (rc != 0) {
+        kenlex_log_error("Error sending email from host");
+    }
+
     return rc;
 }
 
@@ -235,7 +239,11 @@ int kenlex_email_frequency(char* item, int frequency, long int time_frame, char*
     char system_cmd[8192];
     snprintf(system_cmd, sizeof(system_cmd), "echo \"%s\" | mail -s \"Kenlex File Event Alert\" -a \"From:Kenlex Notifications\" -A %s %s", email_message, log_file, email_address_str);
 
-    rc = rc = system(system_cmd);
+    rc = system(system_cmd);
+
+    if (rc != 0) {
+        kenlex_log_error("Error sending email from host");
+    }
 
     return rc;
 }
