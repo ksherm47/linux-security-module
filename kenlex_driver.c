@@ -155,7 +155,7 @@ int main(int argc, char* argv[]){
             //meaning that they refer to the previous line's file path
             int i = 0;
             if(firstString != NULL && strlen(firstString) < 4){
-                for(i = 0; i < strlen(firstString)) {
+                for(i = 0; i < strlen(firstString); i++) {
                     if(firstString[i] != 'W' && firstString[i] != 'R' && firstString[i] != 'A'){
                         isContinuation = false;
                     }
@@ -269,7 +269,7 @@ int main(int argc, char* argv[]){
     // Step 1: input a file path
     // Step 2: get settings until done
     // Step 3: repeat
-    char fileBuffUI[256];
+    char* fileBuffUI;
     char maskBuffUI[8];
     char timeFrameBuffUI[8];
     char answer = '?';
@@ -280,7 +280,9 @@ int main(int argc, char* argv[]){
 
     bool invalidMaskString = false;
     bool doneWithSettings = false;
-    printf("Welcome to Kenlex File Security Monitoring System\n")
+
+    fileBuffUI = (char*)malloc(256 * sizeof(char));
+    printf("Welcome to Kenlex File Security Monitoring System\n");
     while(true){
         kwdUI = 0;
         do{
