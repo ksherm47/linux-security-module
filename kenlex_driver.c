@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+#include <stdbool.h>
 
 const long ONE_DAY = 86400000;
 const long ONE_HOUR = 3600000;
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]){
         add_email_address(emailBuff, strlen(emailBuff));
     }
 
-    printf("Global Settings Created Successfully\n")
+    printf("Global Settings Created Successfully\n");
     //parse default timeframe value
     defaultTimeFrame = parseTimeframe(timeBuff);
     if(defaultTimeFrame < 0){
