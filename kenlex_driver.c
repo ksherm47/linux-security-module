@@ -31,12 +31,12 @@ int addSetting(char* filePath, char* maskType, int severity, int frequency, long
     int fileLen = strlen(filePath);
     int i = 0;
     int mask = 0;
-    for(i = 0; i < fileLen; i++) {
-        if(firstString[i] == 'W'){
+    for(i = 0; i < strlen(maskType); i++) {
+        if(maskType[i] == 'W'){
             mask = mask | WRITE;
-        } else if (firstString[i] == 'R'){
+        } else if (maskType[i] == 'R'){
             mask = mask | READ;
-        } else if firstString[i] == 'A'){
+        } else if maskType[i] == 'A'){
              mask = mask | ACCESS;
         }
     }
