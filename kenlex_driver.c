@@ -269,7 +269,7 @@ int main(int argc, char* argv[]){
     // Step 1: input a file path
     // Step 2: get settings until done
     // Step 3: repeat
-    char* fileBuffUI[256];
+    char fileBuffUI[256];
     char maskBuffUI[8];
     char timeFrameBuffUI[8];
     char answer = '?';
@@ -301,7 +301,8 @@ int main(int argc, char* argv[]){
                 printf("Write R for Read, W for Write, and/or A for Accces in any order with no spaces: ");
                 scanf("%s", maskBuffUI);
                 if(strlen(maskBuffUI) < 4){
-                    for(i = 0; i < strlen(maskBuffUI)) {
+                    int i = 0;
+                    for(i = 0; i < strlen(maskBuffUI); i++) {
                         if(maskBuffUI[i] != 'W' && maskBuffUI[i] != 'R' && maskBuffUI[i] != 'A'){
                             invalidMaskString = true;
                             printf("Inputted string was invalid. Try again.");
