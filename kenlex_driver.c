@@ -36,7 +36,7 @@ int addSetting(char* filePath, char* maskType, int severity, int frequency, long
             mask = mask | WRITE;
         } else if (maskType[i] == 'R'){
             mask = mask | READ;
-        } else if maskType[i] == 'A'){
+        } else if (maskType[i] == 'A'){
              mask = mask | ACCESS;
         }
     }
@@ -44,7 +44,7 @@ int addSetting(char* filePath, char* maskType, int severity, int frequency, long
     struct event_settings_struct es = {
         .severity = severity,
         .frequency = frequency,
-        .time_frame = timeframe
+        .time_frame = timeFrame
     };
 
     add_item_setting(filePath, fileLen, es, mask);
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
         exit(-1);
     }
 
-    if(kenlex_log_init(argv[2] < 0) {
+    if(kenlex_log_init(argv[2]) < 0) {
         printf("Failure opening log file. Exiting");
         exit(-1);
     }
@@ -339,6 +339,5 @@ int main(int argc, char* argv[]){
             }
         }
     }
-
     return 0;
 }
