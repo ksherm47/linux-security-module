@@ -135,7 +135,7 @@ int main(int argc, char* argv[]){
         }
         
         size_t lineBuffSize = 256;
-        char lineBuff[lineBuffSize];
+        char *lineBuff = (char*)malloc(lineBuffSize * sizeof(char));
         char delim[] = " ";
         char *firstString;
         char *filePath;
@@ -269,7 +269,7 @@ int main(int argc, char* argv[]){
     // Step 1: input a file path
     // Step 2: get settings until done
     // Step 3: repeat
-    char* fileBuffUI;
+    char* fileBuffUI[256];
     char maskBuffUI[8];
     char timeFrameBuffUI[8];
     char answer = '?';
@@ -281,7 +281,7 @@ int main(int argc, char* argv[]){
     bool invalidMaskString = false;
     bool doneWithSettings = false;
 
-    fileBuffUI = (char*)malloc(256 * sizeof(char));
+    
     printf("Welcome to Kenlex File Security Monitoring System\n");
     while(true){
         kwdUI = 0;
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]){
             if(kwdUI < 0){
                 printf("Inputted file was invalid. Retry.\n");
             }
-            printf("Input the name of the file you want to watch\n")
+            printf("Input the name of the file you want to watch\n");
             scanf("%s", fileBuffUI);
             kwdUI = kenlex_add_path(fileBuffUI);
         } while (kwdUI < 0);
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]){
             do {
                 printf("Which actions for %s would you like to watch?\n", fileBuffUI);
                 printf("Write R for Read, W for Write, and/or A for Accces in any order with no spaces: ");
-                scanf("%s", maskBuffUI)
+                scanf("%s", maskBuffUI);
                 if(strlen(maskBuffUI) < 4){
                     for(i = 0; i < strlen(maskBuffUI)) {
                         if(maskBuffUI[i] != 'W' && maskBuffUI[i] != 'R' && maskBuffUI[i] != 'A'){
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]){
             scanf("%d", &frequencyUI);
             timeFrameUI = -1;
             while(timeFrameUI < 0){
-                printf("Enter a time frame with a number followed by a letter in terms of [D]ays, [H]ours, [M]inutes, or [S]econds.\n")
+                printf("Enter a time frame with a number followed by a letter in terms of [D]ays, [H]ours, [M]inutes, or [S]econds.\n");
                 printf("For example, enter 12H for 12 Hours\n");
                 scanf("%s", timeFrameBuffUI);
                 timeFrameUI = parseTimeframe(timeFrameBuffUI);
@@ -333,7 +333,7 @@ int main(int argc, char* argv[]){
             answer = '?';
             while(answer != 'y' && answer != 'Y' && answer != 'N' && answer != 'n'){
                 printf("Are you finished inputting watch settings? [Y/N]: \n");
-                scanf("%c", &answer)
+                scanf("%c", &answer);
             }
             if(answer == 'y' || answer == 'Y'){
                 doneWithSettings = true;
