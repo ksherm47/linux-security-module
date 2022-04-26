@@ -334,7 +334,7 @@ int main(int argc, char* argv[]){
             answer = '?';
             while(answer != 'y' && answer != 'Y' && answer != 'N' && answer != 'n'){
                 printf("Are you finished inputting watch settings? [Y/N]: \n");
-                scanf("%c", &answer);
+                scanf(" %c", &answer);
             }
             if(answer == 'y' || answer == 'Y'){
                 doneWithSettings = true;
